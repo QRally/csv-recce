@@ -53,6 +53,7 @@
 
     .scroll-container {
       flex: 1;
+      min-height: 0; /* CRITICAL FIX: prevents grid from expanding container past viewport */
       overflow-y: auto;
       padding: 10px;
       -webkit-overflow-scrolling: touch;
@@ -75,8 +76,8 @@
     .btn {
       border: none;
       border-radius: 8px;
-      min-height: 56px;
-      font-size: 1.5rem;
+      min-height: 52px;
+      font-size: 1.4rem;
       font-weight: 800;
       color: #fff;
       display: flex;
@@ -97,14 +98,14 @@
       background: #121212;
       border-top: 2px solid #282828;
       padding: 10px;
-      flex-shrink: 0;
+      flex-shrink: 0; /* Ensures footer never gets squished or pushed out */
       display: flex;
       flex-direction: column;
       gap: 8px;
     }
 
     .log-container {
-      max-height: 130px;
+      max-height: 100px;
       overflow-y: auto;
       font-family: monospace;
       font-size: 1rem;
@@ -132,17 +133,23 @@
       min-height: 24px;
     }
 
-    .control-row { display: flex; gap: 8px; }
+    .control-row { 
+      display: flex; 
+      gap: 8px; 
+    }
     .btn-action {
       flex: 1;
       background: #333;
       color: #fff;
-      padding: 12px;
-      font-size: 1rem;
+      padding: 14px;
+      font-size: 1.1rem;
       font-weight: bold;
       border: none;
       border-radius: 6px;
+      cursor: pointer;
+      touch-action: manipulation;
     }
+    .btn-action:active { background: #555; }
   </style>
 </head>
 <body>
@@ -239,7 +246,6 @@
         document.getElementById('gps-status').textContent = `±${Math.round(accuracy * 1.09361)} yd`;
         document.getElementById('gps-status').style.color = "#00ff66";
 
-        // Convert speed m/s to MPH if available
         if (speed !== null && !isNaN(speed)) {
           currentSpeedMph = Math.round(speed * 2.23694);
         } else {
