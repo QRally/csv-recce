@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Rally Pace Note Recce</title>
+  <style>
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+      user-select: none; 
+      -webkit-user-select: none; 
+    }
+
+    /* ALLOW EDITING ON EDITABLE SPANS */
+    [contenteditable="true"] {
+      user-select: text !important;
+      -webkit-user-select: text !important;
+      outline: none;
+    }
+
+    body {
+      background-color: #080808;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    header {
+      background: #141414;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 16px;
+      border-bottom: 2px solid #282828;
+      flex-shrink: 0;
+    }
+    .interval-box {
+      font-size: 2.8rem;
+      font-weight: 900;
+      color: #00ff66;
+      line-height: 1;
+    }
+    .status-box {
+      font-size: 0.85rem;
+      color: #aaa;
+      text-align: right;
+    }
+
+    .scroll-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .section-title {
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: #ffcc00;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 12px 0 6px 2px;
+    }
+    .section-title:first-child { margin-top: 0; }
+
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .grid-3col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .grid-4col { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+
+    .btn {
+      border: none;
+      border-radius: 8px;
+      min-height: 56px;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .btn:active { transform: scale(0.96); filter: brightness(1.3); }
+
+    .btn-left { background: #cc0000; }
+    .btn-right { background: #0066cc; }
+    .btn-mod { background: #222; color: #ffcc00; border: 1px solid #444; font-size: 1.1rem; }
+    .btn-hazard { background: #8b0000; color: #fff; font-size: 1.1rem; }
+    .btn-feature { background: #2e5b2e; color: #fff; font-size: 1.1rem; }
+
+    footer {
+      background: #121212;
+      border-top: 2px solid #282828;
+      padding: 10px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .log-container {
+      max-height: 130px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 1rem;
+      background: #000;
+      padding: 6px;
+      border-radius: 6px;
+      border: 1px solid #333;
+    }
+    .log-row {
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid #1a1a1a;
+      border-radius: 4px;
+    }
+    .log-row.selected { background: #333300; }
+    
+    .note-text-editable {
+      color: #ffcc00;
+      font-family: monospace;
+      font-size: 1.05rem;
+      font-weight: bold;
+      flex: 1;
+      padding: 2px 4px;
+      min-height: 24px;
+    }
+
+    .control-row { display: flex; gap: 8px; }
+    .btn-action {
+      flex: 1;
+      background: #333;
+      color: #fff;
+      padding: 12px;
+      font-size: 1rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div>
+      <span style="font-size: 0.75rem; color: #888; display: block;">INTERVAL</span>
+      <div class="interval-box" id="interval">0 <span style="font-size: 1.1rem">YDS</span></div>
+    </div>
+    <div class="status-box">
+      <div>TOTAL: <span id="total-dist">0</span> YDS</div>
+      <div>GPS: <span id="gps-status" style="color: #ff3333;">INIT</span></div>
+    </div>
+  </header>
+
+  <div class="scroll-container">
+    <div class="section-title">Corner Severities</div>
+    <div class="grid-2col">
+      <button class="btn btn-left" onclick="recordNote('L6')">L6</button>
+      <button class="btn btn-right" onclick="recordNote('R6')">R6</button>
+      <button class="btn btn-left" onclick="recordNote('L5')">L5</button>
+      <button class="btn btn-right" onclick="recordNote('R5')">R5</button>
+      <button class="btn btn-left" onclick="recordNote('L4')">L4</button>
+      <button class="btn btn-right" onclick="recordNote('R4')">R4</button>
+      <button class="btn btn-left" onclick="recordNote('L3')">L3</button>
+      <button class="btn btn-right" onclick="recordNote('R3')">R3</button>
+      <button class="btn btn-left" onclick="recordNote('L2')">L2</button>
+      <button class="btn btn-right" onclick="recordNote('R2')">R2</button>
+      <button class="btn btn-left" onclick="recordNote('L1')">L1</button>
+      <button class="btn btn-right" onclick="recordNote('R1')">R1</button>
+      <button class="btn btn-left" onclick="recordNote('L HAIRPIN')">L HAIRPIN</button>
+      <button class="btn btn-right" onclick="recordNote('R HAIRPIN')">R HAIRPIN</button>
+    </div>
+
+    <div class="section-title">Modifiers</div>
+    <div class="grid-3col">
+      <button class="btn btn-mod" onclick="appendModifier(' tightens')">&gt; tightens</button>
+      <button class="btn btn-mod" onclick="appendModifier(' opens')">&lt; opens</button>
+      <button class="btn btn-mod" onclick="appendModifier(' long')">long</button>
+      <button class="btn btn-mod" onclick="appendModifier(' x-long')">x-long</button>
+      <button class="btn btn-mod" onclick="appendModifier(' late')">late</button>
+      <button class="btn btn-mod" onclick="appendModifier(' early')">early</button>
+    </div>
+
+    <div class="section-title">Elevation & Crests</div>
+    <div class="grid-4col">
+      <button class="btn btn-feature" onclick="recordNote('/CR')">/CR</button>
+      <button class="btn btn-feature" onclick="appendModifier(' into')">into</button>
+      <button class="btn btn-feature" onclick="recordNote('JMP')">JMP</button>
+      <button class="btn btn-feature" onclick="recordNote('DIP')">DIP</button>
+    </div>
+
+    <div class="section-title">Line & Hazards</div>
+    <div class="grid-3col">
+      <button class="btn btn-mod" onclick="appendModifier(' CUT')">CUT</button>
+      <button class="btn btn-mod" onclick="appendModifier(' D/C')">DON'T CUT</button>
+      <button class="btn btn-mod" onclick="appendModifier(' narrow')">narrow</button>
+      <button class="btn btn-hazard" onclick="appendModifier(' !')">! (caution)</button>
+      <button class="btn btn-hazard" onclick="appendModifier(' !!')">!! (danger)</button>
+      <button class="btn btn-hazard" onclick="appendModifier(' mud')">MUD</button>
+    </div>
+  </div>
+
+  <footer>
+    <div class="log-container" id="notes-log"></div>
+    <div class="control-row">
+      <button class="btn-action" onclick="undoLast()">UNDO</button>
+      <button class="btn-action" id="export-btn" onclick="exportNotes()">EXPORT CSV</button>
+    </div>
+  </footer>
+
+  <script>
+    let totalYards = 0;
+    let lastPointYards = 0;
+    let lastLat = null, lastLon = null;
+    let currentSpeedMph = 0;
+    let paceNotes = [];
+    let selectedIndex = -1;
+
+    function getDistanceInYards(lat1, lon1, lat2, lon2) {
+      const R = 6371000;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return (R * c) * 1.09361;
+    }
+
+    if ("geolocation" in navigator) {
+      navigator.geolocation.watchPosition(position => {
+        const { latitude, longitude, accuracy, speed } = position.coords;
+        document.getElementById('gps-status').textContent = `±${Math.round(accuracy * 1.09361)} yd`;
+        document.getElementById('gps-status').style.color = "#00ff66";
+
+        // Convert speed m/s to MPH if available
+        if (speed !== null && !isNaN(speed)) {
+          currentSpeedMph = Math.round(speed * 2.23694);
+        } else {
+          currentSpeedMph = 0;
+        }
+
+        if (lastLat !== null && lastLon !== null) {
+          const delta = getDistanceInYards(lastLat, lastLon, latitude, longitude);
+          if (delta > 0.8) { 
+            totalYards += delta;
+            updateDisplay();
+          }
+        }
+        lastLat = latitude;
+        lastLon = longitude;
+      }, err => {
+        let msg = "ERROR";
+        if (err.code === 1) msg = "PERM DENIED";
+        if (err.code === 2) msg = "NO SIGNAL";
+        if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+          msg = "NEED HTTPS";
+        }
+        document.getElementById('gps-status').textContent = msg;
+      }, {
+        enableHighAccuracy: true,
+        maximumAge: 0,
+        timeout: 10000
+      });
+    } else {
+      document.getElementById('gps-status').textContent = "UNSUPPORTED";
+    }
+
+    function updateDisplay() {
+      const interval = Math.round(totalYards - lastPointYards);
+      document.getElementById('interval').textContent = `${interval} YDS`;
+      document.getElementById('total-dist').textContent = Math.round(totalYards);
+    }
+
+    function recordNote(call) {
+      const interval = Math.round(totalYards - lastPointYards);
+      const entry = { 
+        interval, 
+        call, 
+        total: Math.round(totalYards),
+        timestamp: Date.now(),
+        lat: lastLat !== null ? lastLat.toFixed(6) : '',
+        lon: lastLon !== null ? lastLon.toFixed(6) : '',
+        speedMph: currentSpeedMph
+      };
+      paceNotes.push(entry);
+      
+      lastPointYards = totalYards;
+      selectedIndex = paceNotes.length - 1;
+      updateDisplay();
+      renderLog();
+
+      if (navigator.vibrate) navigator.vibrate(40);
+    }
+
+    function appendModifier(text) {
+      if (paceNotes.length === 0) return;
+      let idx = selectedIndex >= 0 ? selectedIndex : paceNotes.length - 1;
+      paceNotes[idx].call += text;
+      renderLog();
+    }
+
+    function updateNoteText(idx, val) {
+      if (paceNotes[idx]) {
+        paceNotes[idx].call = val;
+      }
+    }
+
+    function selectRow(idx) {
+      selectedIndex = idx;
+      const rows = document.querySelectorAll('.log-row');
+      rows.forEach((r, i) => {
+        if (i === idx) r.classList.add('selected');
+        else r.classList.remove('selected');
+      });
+    }
+
+    function undoLast() {
+      if (paceNotes.length === 0) return;
+      paceNotes.pop();
+      lastPointYards = paceNotes.length > 0 ? paceNotes[paceNotes.length - 1].total : 0;
+      selectedIndex = paceNotes.length - 1;
+      updateDisplay();
+      renderLog();
+    }
+
+    function renderLog() {
+      const log = document.getElementById('notes-log');
+      log.innerHTML = '';
+      
+      paceNotes.forEach((n, i) => {
+        const row = document.createElement('div');
+        row.className = `log-row ${i === selectedIndex ? 'selected' : ''}`;
+        row.onclick = () => selectRow(i);
+
+        const prefix = document.createElement('span');
+        prefix.style.cssText = "color:#888; margin-right:6px; font-size:0.9rem; white-space:nowrap;";
+        prefix.textContent = `[${i+1}] ${n.interval}y ->`;
+
+        const editableText = document.createElement('span');
+        editableText.className = 'note-text-editable';
+        editableText.contentEditable = "true";
+        editableText.textContent = n.call;
+        
+        editableText.oninput = (e) => {
+          updateNoteText(i, e.target.textContent);
+        };
+        editableText.onclick = (e) => {
+          e.stopPropagation();
+          selectRow(i);
+        };
+
+        row.appendChild(prefix);
+        row.appendChild(editableText);
+        log.appendChild(row);
+      });
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function exportNotes() {
+      if (paceNotes.length === 0) {
+        alert("No notes recorded yet!");
+        return;
+      }
+
+      let csvContent = "data:text/csv;charset=utf-8,Index,Timestamp_MS,ISO_Time,Interval_Yards,Total_Yards,Call,Latitude,Longitude,Speed_MPH\n";
+      
+      paceNotes.forEach((n, i) => {
+        const cleanCall = n.call.replace(/"/g, '""');
+        const isoTime = new Date(n.timestamp).toISOString();
+        csvContent += `${i+1},${n.timestamp},${isoTime},${n.interval},${n.total},"${cleanCall}",${n.lat},${n.lon},${n.speedMph}\n`;
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `QRally_PaceNotes_${Date.now()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
+</body>
+</html>
