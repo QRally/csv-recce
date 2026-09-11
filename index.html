@@ -24,7 +24,7 @@
       color: #fff;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       height: 100vh;
-      height: 100dvh; /* Adapts dynamically to mobile browser address/navigation bars */
+      height: 100dvh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -170,20 +170,20 @@
   <div class="scroll-container">
     <div class="section-title">Corner Severities</div>
     <div class="grid-2col">
-      <button class="btn btn-left" onclick="recordNote('L6')">L6</button>
-      <button class="btn btn-right" onclick="recordNote('R6')">R6</button>
-      <button class="btn btn-left" onclick="recordNote('L5')">L5</button>
-      <button class="btn btn-right" onclick="recordNote('R5')">R5</button>
-      <button class="btn btn-left" onclick="recordNote('L4')">L4</button>
-      <button class="btn btn-right" onclick="recordNote('R4')">R4</button>
-      <button class="btn btn-left" onclick="recordNote('L3')">L3</button>
-      <button class="btn btn-right" onclick="recordNote('R3')">R3</button>
-      <button class="btn btn-left" onclick="recordNote('L2')">L2</button>
-      <button class="btn btn-right" onclick="recordNote('R2')">R2</button>
-      <button class="btn btn-left" onclick="recordNote('L1')">L1</button>
-      <button class="btn btn-right" onclick="recordNote('R1')">R1</button>
-      <button class="btn btn-left" onclick="recordNote('L HAIRPIN')">L HAIRPIN</button>
-      <button class="btn btn-right" onclick="recordNote('R HAIRPIN')">R HAIRPIN</button>
+      <button class="btn btn-left" onclick="handleCornerCall('L6')">L6</button>
+      <button class="btn btn-right" onclick="handleCornerCall('R6')">R6</button>
+      <button class="btn btn-left" onclick="handleCornerCall('L5')">L5</button>
+      <button class="btn btn-right" onclick="handleCornerCall('R5')">R5</button>
+      <button class="btn btn-left" onclick="handleCornerCall('L4')">L4</button>
+      <button class="btn btn-right" onclick="handleCornerCall('R4')">R4</button>
+      <button class="btn btn-left" onclick="handleCornerCall('L3')">L3</button>
+      <button class="btn btn-right" onclick="handleCornerCall('R3')">R3</button>
+      <button class="btn btn-left" onclick="handleCornerCall('L2')">L2</button>
+      <button class="btn btn-right" onclick="handleCornerCall('R2')">R2</button>
+      <button class="btn btn-left" onclick="handleCornerCall('L1')">L1</button>
+      <button class="btn btn-right" onclick="handleCornerCall('R1')">R1</button>
+      <button class="btn btn-left" onclick="handleCornerCall('L HAIRPIN')">L HAIRPIN</button>
+      <button class="btn btn-right" onclick="handleCornerCall('R HAIRPIN')">R HAIRPIN</button>
     </div>
 
     <div class="section-title">Modifiers</div>
@@ -198,10 +198,10 @@
 
     <div class="section-title">Elevation & Crests</div>
     <div class="grid-4col">
-      <button class="btn btn-feature" onclick="recordNote('/CR')">/CR</button>
+      <button class="btn btn-feature" onclick="handleCornerCall('/CR')">/CR</button>
       <button class="btn btn-feature" onclick="appendModifier(' into')">into</button>
-      <button class="btn btn-feature" onclick="recordNote('JMP')">JMP</button>
-      <button class="btn btn-feature" onclick="recordNote('DIP')">DIP</button>
+      <button class="btn btn-feature" onclick="handleCornerCall('JMP')">JMP</button>
+      <button class="btn btn-feature" onclick="handleCornerCall('DIP')">DIP</button>
     </div>
 
     <div class="section-title">Line & Hazards</div>
@@ -284,6 +284,24 @@
       const interval = Math.round(totalYards - lastPointYards);
       document.getElementById('interval').textContent = `${interval} YDS`;
       document.getElementById('total-dist').textContent = Math.round(totalYards);
+    }
+
+    // Smart Handler: appends to existing note if it ends with "into", otherwise starts a new note entry
+    function handleCornerCall(call) {
+      if (paceNotes.length > 0) {
+        let idx = selectedIndex >= 0 ? selectedIndex : paceNotes.length - 1;
+        let currentCall = paceNotes[idx].call;
+
+        if (currentCall.trim().endsWith("into")) {
+          paceNotes[idx].call += " " + call;
+          renderLog();
+          if (navigator.vibrate) navigator.vibrate(40);
+          return;
+        }
+      }
+      
+      // Default: create new row entry
+      recordNote(call);
     }
 
     function recordNote(call) {
